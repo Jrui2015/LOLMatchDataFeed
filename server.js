@@ -21,6 +21,7 @@ var elasticsearch = new Elasticsearch({
 var queue = new queueModule();
 queue.enqueue(2482980310); // a start point
 
+// BFS
 setInterval(function() {
   if (queue.isEmpty()) {
     console.log("Queue is empty now!");
@@ -158,8 +159,9 @@ setInterval(function() {
     }
   });
 
-}, 2000);
+}, 1500);
 
+// Function: construct match data
 var constructMatchData = function(data) {
 
   var matchData = {
@@ -172,6 +174,9 @@ var constructMatchData = function(data) {
       firstBlood: data.teams[0].firstBlood,
       firstTower: data.teams[0].firstTower,
       firstInhibitor: data.teams[0].firstInhibitor,
+      firstBaron: data.teams[0].firstBaron,
+      dragonKills: data.teams[0].dragonKills,
+      baronKills: data.teams[0].baronKills,
       bans: []
     }, {
       teamId: data.teams[1].teamId,
@@ -179,6 +184,9 @@ var constructMatchData = function(data) {
       firstBlood: data.teams[1].firstBlood,
       firstTower: data.teams[1].firstTower,
       firstInhibitor: data.teams[1].firstInhibitor,
+      firstBaron: data.teams[1].firstBaron,
+      dragonKills: data.teams[1].dragonKills,
+      baronKills: data.teams[1].baronKills,
       bans: []
     }]
   };
@@ -186,12 +194,21 @@ var constructMatchData = function(data) {
   // fill participants array
   for (var i = 0; i < data.participants.length; i++) {
     var participant = data.participants[i];
+
+    // calculate KDA
+    var kda = 0;
+    if (participant.stats.deaths === 0) {
+      kda = (participant.stats.kills + participant.stats.assists) === 0 ? 0 : 20;
+    } else {
+      kda = (participant.stats.kills + participant.stats.assists) / participant.stats.deaths;
+    }
+
     var championData = {
       name: championList[participant.championId].name,
       winner: participant.stats.winner,
+      lane: participant.timeline.lane,
       kills: participant.stats.kills,
-      assists: participant.stats.assists,
-      deaths: participant.stats.deaths,
+      kda: kda.toFixed(2),
       quadraKills: participant.stats.quadraKills,
       pentaKills: participant.stats.pentaKills,
       firstBlood: participant.stats.firstBloodKill
@@ -202,6 +219,7 @@ var constructMatchData = function(data) {
 
   // fill bans array of 2 teams
   for (var i = 0; i < data.teams[0].bans.length; i++) {
+    // 注意 push 进去的是个 object, 带 name + key
     matchData.teams[0].bans.push(championList[data.teams[0].bans[i].championId]);
   }
 
@@ -210,4 +228,4 @@ var constructMatchData = function(data) {
   }
 
   return matchData;
-}
+};
