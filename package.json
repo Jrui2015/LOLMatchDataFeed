@@ -1,0 +1,28 @@
+{
+  "name": "lol_match_data_feed",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jrui2015/LOLMatchDataFeed.git"
+  },
+  "author": "Jinglong Li",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jrui2015/LOLMatchDataFeed/issues"
+  },
+  "homepage": "https://github.com/Jrui2015/LOLMatchDataFeed#readme",
+  "dependencies": {
+    "aws-es": "^1.5.3",
+    "elasticsearch": "^13.0.0",
+    "epoch.js": "^0.4.4",
+    "http-aws-es": "^1.1.3",
+    "leagueapi": "^0.4.21",
+    "queue-fifo": "^0.2.3"
+  }
+}
