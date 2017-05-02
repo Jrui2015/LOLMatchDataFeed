@@ -19,7 +19,7 @@ var elasticsearch = new Elasticsearch({
 });
 // queue config
 var queue = new queueModule();
-queue.enqueue(2482980310); // a start point
+queue.enqueue(2484277625); // a start point
 
 // BFS
 setInterval(function() {
@@ -91,26 +91,27 @@ setInterval(function() {
               console.log("Error: fail to search summonerId from AWS ES", err);
             } else {
               if (data.hits.hits.length === 0) {
-                // index summonerId to AWS ES
-                elasticsearch.index({
-                  index: 'loldata',
-                  type: 'summonerId',
-                  body: {
-                    summonerId: participantId
-                  }
-                }, function(err, data) {
-                  if (err) {
-                    console.log("Error: fail to index summonerId to AWS ES", err);
-                  } else {
-                    console.log("Step 3: index summonerId to AWS ES and push item into queue...\n");
-                  }
-                });
 
-                // refill queue
                 if (queue.size() < 100) {
+                  // index summonerId to AWS ES
+                  elasticsearch.index({
+                    index: 'loldata',
+                    type: 'summonerId',
+                    body: {
+                      summonerId: participantId
+                    }
+                  }, function(err, data) {
+                    if (err) {
+                      console.log("Error: fail to index summonerId to AWS ES", err);
+                    } else {
+                      console.log("Step 3: index summonerId(" + participantId + ") to AWS ES and push item into queue...\n");
+                    }
+                  });
+
+                  // push new matchId into queue
                   var options = {
                     beginIndex: 1,
-                    endIndex: 5
+                    endIndex: 10
                   };
 
                   LolApi.getMatchHistory(participantId, options, 'na', function(err, data) {
@@ -140,8 +141,10 @@ setInterval(function() {
                                 console.log("Error: fail to search matchId from AWS ES");
                               } else {
                                 if (data.hits.hits.length === 0) {
-                                  console.log("Queue enqueue =====> " + mId);
-                                  queue.enqueue(mId);
+                                  if (queue.size() < 100) {
+                                    console.log("Queue enqueue =====> " + mId);
+                                    queue.enqueue(mId);
+                                  }
                                 }
                               }
                             });
@@ -159,7 +162,7 @@ setInterval(function() {
     }
   });
 
-}, 1500);
+}, 1000);
 
 // Function: construct match data
 var constructMatchData = function(data) {
@@ -218,13 +221,17 @@ var constructMatchData = function(data) {
   }
 
   // fill bans array of 2 teams
-  for (var i = 0; i < data.teams[0].bans.length; i++) {
-    // 注意 push 进去的是个 object, 带 name + key
-    matchData.teams[0].bans.push(championList[data.teams[0].bans[i].championId]);
+  if (data.teams[0].bans !== undefined) {
+    for (var i = 0; i < data.teams[0].bans.length; i++) {
+      // 注意 push 进去的是个 object, 带 name + key
+      matchData.teams[0].bans.push(championList[data.teams[0].bans[i].championId]);
+    }
   }
 
-  for (var i = 0; i < data.teams[1].bans.length; i++) {
-    matchData.teams[1].bans.push(championList[data.teams[1].bans[i].championId]);
+  if (data.teams[1].bans !== undefined) {
+    for (var i = 0; i < data.teams[1].bans.length; i++) {
+      matchData.teams[1].bans.push(championList[data.teams[1].bans[i].championId]);
+    }
   }
 
   return matchData;
